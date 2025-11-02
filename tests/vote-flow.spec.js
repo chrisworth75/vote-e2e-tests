@@ -24,16 +24,16 @@ test.describe('Vote Application E2E Tests', () => {
     await page.click('#register-btn');
 
     // Wait for success message
-    await expect(page.locator('.message.success')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.alert-success')).toBeVisible({ timeout: 5000 });
 
     // Wait for polls section to appear
-    await expect(page.locator('#polls-section')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#polls-section')).not.toHaveClass(/d-none/, { timeout: 5000 });
 
     // Verify username is displayed
     await expect(page.locator('#username-display')).toHaveText(username);
 
-    // Verify polls are loaded
-    await expect(page.locator('.poll-card')).toHaveCount(4, { timeout: 5000 });
+    // Verify polls are loaded (now in .card not .poll-card)
+    await expect(page.locator('#polls-container .card')).toHaveCount(4, { timeout: 5000 });
   });
 
   test('should login with existing user', async ({ page }) => {
@@ -63,16 +63,16 @@ test.describe('Vote Application E2E Tests', () => {
     // Register and login
     await page.fill('#username-input', username);
     await page.click('#register-btn');
-    await expect(page.locator('#polls-section')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#polls-section')).not.toHaveClass(/d-none/, { timeout: 5000 });
 
     // Wait for polls to load
     await page.waitForTimeout(1000);
 
     // Get first poll
-    const firstPoll = page.locator('.poll-card').first();
+    const firstPoll = page.locator('#polls-container .card').first();
 
     // Check for voting options
-    const hasVotingOptions = await firstPoll.locator('.poll-options').isVisible();
+    const hasVotingOptions = await firstPoll.locator('.form-check').count() > 0;
 
     if (hasVotingOptions) {
       // Select first option
@@ -80,13 +80,13 @@ test.describe('Vote Application E2E Tests', () => {
       await firstOption.click();
 
       // Click vote button
-      await firstPoll.locator('.vote-btn').click();
+      await firstPoll.locator('button.btn-primary').click();
 
       // Wait a bit for the vote to be processed
       await page.waitForTimeout(1500);
 
-      // Should now see "You voted for:" indicator
-      await expect(firstPoll.locator('.voted-indicator')).toBeVisible({ timeout: 5000 });
+      // Should now see "You voted for:" indicator (now using .alert-success)
+      await expect(firstPoll.locator('.alert-success')).toBeVisible({ timeout: 5000 });
 
       // Should see "Live Results" heading
       await expect(firstPoll.locator('h4')).toContainText('Live Results');
@@ -98,7 +98,7 @@ test.describe('Vote Application E2E Tests', () => {
       await expect(firstPoll.locator('.vote-count')).toBeVisible();
 
       // Should see "Change Vote" button
-      await expect(firstPoll.locator('.change-vote-btn')).toBeVisible();
+      await expect(firstPoll.locator('button.btn-outline-secondary')).toBeVisible();
     }
   });
 
@@ -108,35 +108,35 @@ test.describe('Vote Application E2E Tests', () => {
     // Register and login
     await page.fill('#username-input', username);
     await page.click('#register-btn');
-    await expect(page.locator('#polls-section')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#polls-section')).not.toHaveClass(/d-none/, { timeout: 5000 });
 
     await page.waitForTimeout(1000);
 
     // Get first poll
-    const firstPoll = page.locator('.poll-card').first();
+    const firstPoll = page.locator('#polls-container .card').first();
 
     // Check if we can vote
-    const hasVotingOptions = await firstPoll.locator('.poll-options').isVisible();
+    const hasVotingOptions = await firstPoll.locator('.form-check').count() > 0;
 
     if (hasVotingOptions) {
       // Vote on first option
       await firstPoll.locator('input[type="radio"]').first().click();
-      await firstPoll.locator('.vote-btn').click();
+      await firstPoll.locator('button.btn-primary').click();
       await page.waitForTimeout(1500);
 
       // Click change vote
-      await firstPoll.locator('.change-vote-btn').click();
+      await firstPoll.locator('button.btn-outline-secondary').click();
 
       // Voting options should be visible again
-      await expect(firstPoll.locator('.poll-options')).toBeVisible();
+      await expect(firstPoll.locator('.form-check').first()).toBeVisible();
 
       // Select a different option (second one)
       await firstPoll.locator('input[type="radio"]').nth(1).click();
-      await firstPoll.locator('.vote-btn').click();
+      await firstPoll.locator('button.btn-primary').click();
       await page.waitForTimeout(1500);
 
       // Should see voted indicator again
-      await expect(firstPoll.locator('.voted-indicator')).toBeVisible();
+      await expect(firstPoll.locator('.alert-success')).toBeVisible();
     }
   });
 
@@ -146,12 +146,12 @@ test.describe('Vote Application E2E Tests', () => {
     // Register and login
     await page.fill('#username-input', username);
     await page.click('#register-btn');
-    await expect(page.locator('#polls-section')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#polls-section')).not.toHaveClass(/d-none/, { timeout: 5000 });
 
     await page.waitForTimeout(1000);
 
-    // Get first poll
-    const firstPoll = page.locator('.poll-card').first();
+    // Get first poll (now using .card instead of .poll-card)
+    const firstPoll = page.locator('#polls-container .card').first();
 
     // Should see chart container
     await expect(firstPoll.locator('.chart-container')).toBeVisible();
@@ -170,9 +170,9 @@ test.describe('Vote Application E2E Tests', () => {
     // Try to login without username
     await page.click('#login-btn');
 
-    // Should show error message
-    await expect(page.locator('.message.error')).toBeVisible();
-    await expect(page.locator('.message.error')).toContainText('Please enter a username');
+    // Should show error message (now using .alert-danger instead of .message.error)
+    await expect(page.locator('.alert-danger')).toBeVisible();
+    await expect(page.locator('.alert-danger')).toContainText('Please enter a username');
   });
 
   test('should persist session on reload', async ({ page }) => {
@@ -247,12 +247,12 @@ test.describe('Vote Application E2E Tests', () => {
     // Register and login
     await page.fill('#username-input', username);
     await page.click('#register-btn');
-    await expect(page.locator('#polls-section')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#polls-section')).not.toHaveClass(/d-none/, { timeout: 5000 });
 
     await page.waitForTimeout(1000);
 
     // Get first poll
-    const firstPoll = page.locator('.poll-card').first();
+    const firstPoll = page.locator('#polls-container .card').first();
 
     // Get initial vote count
     const voteCountElement = firstPoll.locator('.vote-count');
