@@ -153,6 +153,11 @@ test.describe('Vote Application E2E Tests', () => {
     // Get first poll (now using .card instead of .poll-card)
     const firstPoll = page.locator('#polls-container .card').first();
 
+    // Vote first to see the chart (charts only show after voting)
+    await firstPoll.locator('input[type="radio"]').first().click();
+    await firstPoll.locator('button.btn-primary').click();
+    await page.waitForTimeout(2000);
+
     // Should see chart container
     await expect(firstPoll.locator('.chart-container')).toBeVisible();
 
@@ -253,6 +258,11 @@ test.describe('Vote Application E2E Tests', () => {
 
     // Get first poll
     const firstPoll = page.locator('#polls-container .card').first();
+
+    // Vote first to see the results (charts only show after voting)
+    await firstPoll.locator('input[type="radio"]').first().click();
+    await firstPoll.locator('button.btn-primary').click();
+    await page.waitForTimeout(2000);
 
     // Get initial vote count
     const voteCountElement = firstPoll.locator('.vote-count');
